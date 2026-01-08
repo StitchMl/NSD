@@ -16,7 +16,7 @@ Implementazione completa del progetto in GNS3:
 - IPsec: strongSwan (IKEv2 + PSK)
 - Firewall: iptables/nftables (specificare cosa si usa)
 - DNS: BIND9
-- Snapshot runner AV: snapshot GNS3/QEMU oppure reset “stateless” (documentare la scelta)
+- AV runners: ripristino via snapshot GNS3 dopo ogni scan.
 
 ## Convezioni
 - Tutti i link router-router p2p: /30 privati

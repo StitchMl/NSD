@@ -1,11 +1,17 @@
-# dischi/immagini (NON versionare)
+# Disk images / VMs (do not version)
 *.qcow2
 *.img
 *.iso
 *.vmdk
+*.vdi
 
-# cache/backups gns3
+# GNS3 backups/caches
 *.gns3bak
-project/**/appliances/
 project/**/images/
+project/**/appliances/
 project/**/compute/
+project/**/captures/
+
+# Generic
+*.swp
+.DS_Store

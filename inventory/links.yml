@@ -1,9 +1,100 @@
 links:
-  - endpoints: [R1, R2]
-    type: point-to-point
+  # --- VPN Site 1 ---
+  - a: { device: client-A1, if: eth0 }
+    b: { device: CE1, if: eth0 }
+    purpose: site1-lan
 
-  - endpoints: [R1, SW1]
-    type: ethernet
+  - a: { device: CE1, if: eth1 }
+    b: { device: R101, if: eth0 }
+    purpose: site1-wan-to-as100
 
-  - endpoints: [SW1, FW1]
-    type: ethernet
+  # --- AS100 core ---
+  - a: { device: R101, if: eth2 }
+    b: { device: R103, if: eth4 }
+    purpose: as100-core-p2p
+
+  - a: { device: R101, if: eth1 }
+    b: { device: R102, if: eth0 }
+    purpose: as100-core-p2p
+
+  - a: { device: R103, if: eth0 }
+    b: { device: R102, if: eth2 }
+    purpose: as100-core-p2p
+
+  # --- VPN Site 2 ---
+  - a: { device: R102, if: eth1 }
+    b: { device: CE2, if: eth1 }
+    purpose: site2-wan-to-as100
+
+  - a: { device: CE2, if: eth0 }
+    b: { device: Sw1, if: e2 }
+    purpose: site2-lan-switch-uplink
+
+  - a: { device: Sw1, if: e0 }
+    b: { device: client-B1, if: eth0 }
+    purpose: site2-host
+
+  - a: { device: Sw1, if: e1 }
+    b: { device: client-B2, if: eth0 }
+    purpose: site2-host
+
+  # --- Inter-AS (eBGP) ---
+  - a: { device: R103, if: eth2 }
+    b: { device: R201, if: eth0 }
+    purpose: ebgp-interas
+
+  # --- AS200 internal ---
+  - a: { device: R201, if: eth1 }
+    b: { device: R202, if: eth0 }
+    purpose: as200-internal
+
+  - a: { device: R201, if: eth2 }
+    b: { device: GW200, if: eth0 }
+    purpose: as200-to-gw200
+
+  - a: { device: R202, if: eth1 }
+    b: { device: central-node, if: eth0 }
+    purpose: lan3-central
+
+  # --- Enterprise Net: DMZ ---
+  - a: { device: GW200, if: eth1 }
+    b: { device: br1, if: e0 }
+    purpose: dmz-uplink
+
+  - a: { device: br1, if: e1 }
+    b: { device: DNS-server, if: eth0 }
+    purpose: dmz-dns-web
+
+  - a: { device: br1, if: e2 }
+    b: { device: eFW, if: eth0 }
+    purpose: dmz-to-efw
+
+  # --- Enterprise Net: LAN1 ---
+  - a: { device: eFW, if: eth1 }
+    b: { device: br2, if: e0 }
+    purpose: efw-to-lan1
+
+  - a: { device: br2, if: e1 }
+    b: { device: AV1, if: eth0 }
+    purpose: lan1-av
+
+  - a: { device: br2, if: e2 }
+    b: { device: AV2, if: eth0 }
+    purpose: lan1-av
+
+  - a: { device: br2, if: e3 }
+    b: { device: AV3, if: eth0 }
+    purpose: lan1-av
+
+  - a: { device: br2, if: e4 }
+    b: { device: iFW, if: eth0 }
+    purpose: lan1-to-ifw
+
+  # --- Enterprise Net: LAN2 ---
+  - a: { device: iFW, if: eth1 }
+    b: { device: br3, if: e0 }
+    purpose: ifw-to-lan2
+
+  - a: { device: br3, if: e1 }
+    b: { device: LAN-client, if: eth0 }
+    purpose: lan2-client

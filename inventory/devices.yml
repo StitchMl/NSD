@@ -1,77 +1,96 @@
 devices:
   - name: R101
-    role: as100-router
+    role: as100-router-border-site1
     asn: 100
-    os: <es. debian-frr>
+    os: TBD
 
   - name: R102
-    role: as100-router
+    role: as100-router-core-site2
     asn: 100
-    os: <...>
+    os: TBD
 
   - name: R103
-    role: as100-border
+    role: as100-router-border-to-as200
     asn: 100
-    os: <...>
+    os: TBD
 
   - name: R201
-    role: as200-border
+    role: as200-router-border
     asn: 200
-    os: <...>
+    os: TBD
 
   - name: R202
-    role: as200-router-vpn-endpoint
+    role: as200-router-lan3-ipsec-endpoint
     asn: 200
-    os: <...>
+    os: TBD
 
   - name: GW200
-    role: edge-fw
+    role: as200-edge-gateway
     asn: 200
-    os: <...>
+    os: TBD
 
   - name: eFW
-    role: enterprise-fw-ipsec
-    os: <...>
+    role: enterprise-fw-ipsec-termination
+    os: TBD
 
   - name: iFW
-    role: internal-fw
-    os: <...>
+    role: enterprise-internal-fw
+    os: TBD
 
-  - name: dns-server
-    role: dmz-dns-web
-    os: <...>
+  - name: DNS-server
+    role: dmz-dnssec-web
+    os: TBD
 
   - name: central-node
     role: av-orchestrator
-    os: <...>
+    os: TBD
 
   - name: AV1
     role: av-runner
-    os: <...>
+    os: TBD
   - name: AV2
     role: av-runner
-    os: <...>
+    os: TBD
   - name: AV3
     role: av-runner
-    os: <...>
+    os: TBD
 
   - name: LAN-client
-    role: lan-user
-    os: <...>
+    role: enterprise-user
+    os: TBD
 
   - name: CE1
     role: customer-ce-site1
-    os: <...>
+    os: TBD
+
   - name: CE2
     role: customer-ce-site2
-    os: <...>
+    os: TBD
 
   - name: client-A1
     role: customer-host-site1
-    os: <...>
+    os: TBD
+
   - name: client-B1
     role: customer-host-site2
-    os: <...>
+    os: TBD
+
   - name: client-B2
     role: customer-host-site2
-    os: <...>
+    os: TBD
+
+  - name: Sw1
+    role: site2-access-switch
+    os: builtin-ethernet-switch
+
+  - name: br1
+    role: dmz-bridge
+    os: builtin-ethernet-switch
+
+  - name: br2
+    role: lan1-bridge
+    os: builtin-ethernet-switch
+
+  - name: br3
+    role: lan2-bridge
+    os: builtin-ethernet-switch
