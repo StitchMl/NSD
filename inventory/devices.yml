@@ -1,16 +1,77 @@
 devices:
-  - name: R1
-    role: router
-    os: iosv
+  - name: R101
+    role: as100-router
+    asn: 100
+    os: <es. debian-frr>
 
-  - name: R2
-    role: router
-    os: iosv
+  - name: R102
+    role: as100-router
+    asn: 100
+    os: <...>
 
-  - name: SW1
-    role: switch
-    os: iosvl2
+  - name: R103
+    role: as100-border
+    asn: 100
+    os: <...>
 
-  - name: FW1
-    role: firewall
-    os: pfsense
+  - name: R201
+    role: as200-border
+    asn: 200
+    os: <...>
+
+  - name: R202
+    role: as200-router-vpn-endpoint
+    asn: 200
+    os: <...>
+
+  - name: GW200
+    role: edge-fw
+    asn: 200
+    os: <...>
+
+  - name: eFW
+    role: enterprise-fw-ipsec
+    os: <...>
+
+  - name: iFW
+    role: internal-fw
+    os: <...>
+
+  - name: dns-server
+    role: dmz-dns-web
+    os: <...>
+
+  - name: central-node
+    role: av-orchestrator
+    os: <...>
+
+  - name: AV1
+    role: av-runner
+    os: <...>
+  - name: AV2
+    role: av-runner
+    os: <...>
+  - name: AV3
+    role: av-runner
+    os: <...>
+
+  - name: LAN-client
+    role: lan-user
+    os: <...>
+
+  - name: CE1
+    role: customer-ce-site1
+    os: <...>
+  - name: CE2
+    role: customer-ce-site2
+    os: <...>
+
+  - name: client-A1
+    role: customer-host-site1
+    os: <...>
+  - name: client-B1
+    role: customer-host-site2
+    os: <...>
+  - name: client-B2
+    role: customer-host-site2
+    os: <...>

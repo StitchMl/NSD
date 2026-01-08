@@ -1,0 +1,11 @@
+# dischi/immagini (NON versionare)
+*.qcow2
+*.img
+*.iso
+*.vmdk
+
+# cache/backups gns3
+*.gns3bak
+project/**/appliances/
+project/**/images/
+project/**/compute/
