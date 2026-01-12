@@ -21,11 +21,11 @@
 - iFW: consenti LAN2 -> fuori (stateful), blocca LAN2 verso AV e verso LAN1 se non necessario
 
 ## Matrice flussi (minimo)
-| Sorgente | Destinazione | Proto/Port | Esito | Nodo enforcement |
-|---|---|---|---|---|
-| Esterno (AS100/AS200 core) | 160.80.200.3 | tcp/80 | ALLOW | GW200 |
-| Esterno (AS100/AS200 core) | 160.80.200.3 | udp,tcp/53 | ALLOW | GW200 |
-| Esterno (AS100/AS200 core) | 160.80.200.2 | udp/500,udp/4500,ESP | ALLOW | GW200 + eFW(INPUT) |
-| 10.200.2.0/24 | Esterno | any | ALLOW stateful | iFW/eFW/GW200 |
-| 10.200.1.0/24 (AV) | 10.202.3.10 | necessary | ALLOW | eFW/iFW |
-| 10.200.1.0/24 (AV) | altro | any | DENY | eFW/iFW |
+| Sorgente                   | Destinazione | Proto/Port           | Esito          | Nodo enforcement   |
+|----------------------------|--------------|----------------------|----------------|--------------------|
+| Esterno (AS100/AS200 core) | 160.80.200.3 | tcp/80               | ALLOW          | GW200              |
+| Esterno (AS100/AS200 core) | 160.80.200.3 | udp,tcp/53           | ALLOW          | GW200              |
+| Esterno (AS100/AS200 core) | 160.80.200.2 | udp/500,udp/4500,ESP | ALLOW          | GW200 + eFW(INPUT) |
+| 10.200.2.0/24              | Esterno      | any                  | ALLOW stateful | iFW/eFW/GW200      |
+| 10.200.1.0/24 (AV)         | 10.202.3.10  | necessary            | ALLOW          | eFW/iFW            |
+| 10.200.1.0/24 (AV)         | altro        | any                  | DENY           | eFW/iFW            |

@@ -18,5 +18,5 @@ Implementazione in GNS3 di:
 - Snapshot AV runners: ripristino via snapshot GNS3 dopo ogni scan
 
 ## Note di compliance (rispetto traccia)
-- DMZ attuale: 160.80.200.0/24. Se richiesto "DMZ nel pool AS200", spostare DMZ in 2.0.0.0/8 o dichiarare 160.80.200.0/24 come prefisso assegnato ad AS200.
-- CE2 WAN: 1.0.102.0/30 (pubblico, pool AS100).
+- DMZ (AS200): 160.80.200.0/24 (prefisso DMZ assegnato ad AS200 nel laboratorio).
+- Customer WAN (pool AS100): CE1–R101 1.0.101.0/30, CE2–R102 1.0.102.0/30.

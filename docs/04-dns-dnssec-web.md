@@ -3,7 +3,7 @@
 ## IP e host
 - DNS-server: 160.80.200.3/24 (GW 160.80.200.1)
 - Dominio: nsdcourse.xyz
-- www.nsdcourse.xyz -> 160.80.200.3 (Apache sul DNS-server)
+- www.nsdcourse.xyz → 160.80.200.3 (Apache sul DNS-server)
 
 ## Requisiti
 - Authoritative DNS per nsdcourse.xyz
