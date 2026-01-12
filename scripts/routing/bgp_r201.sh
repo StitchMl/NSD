@@ -4,6 +4,9 @@ vtysh <<'VEOF'
 conf t
 ! (opzionale) rotta verso DMZ per poterla annunciare via BGP
 ip route 2.80.200.0/24 10.0.200.2
+ip route 10.200.1.0/24 10.0.200.2
+ip route 10.200.2.0/24 10.0.200.2
+
 !
 router bgp 200
  bgp router-id 2.255.0.1
