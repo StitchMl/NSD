@@ -35,13 +35,13 @@ Il naming dei nodi è congelato come segue:
 - Configurazioni e dump: `configs/`
 - Evidenze (output comandi, log): `evidence/`
 
-## 5. Quick test (smoke test)
-Eseguire in ordine:
-1. Routing: adiacenze OSPF + sessioni BGP (vedi `docs/02-routing.md`)
-2. DNS + DNSSEC: `dig +dnssec www.nsdcourse.xyz` (vedi `docs/04-dns-dnssec-web.md`)
-3. HTTP: `curl http://www.nsdcourse.xyz` da LAN-client
-4. Firewall: test permessi/deny (vedi `docs/03-firewall-policy.md`)
-5. VPN enterprise: ping `central-node -> AV1/AV2/AV3` (vedi `docs/05-vpn-ipsec.md`)
-6. MACsec: ping tra B1/B2 e CE2 su interfaccia MACsec (vedi `docs/06-macsec-mka.md`)
-7. VPN customer: ping `client-A1 -> client-B1/client-B2` (vedi `docs/05-vpn-ipsec.md`)
-8. AV sandbox: distribuzione file + report (vedi `docs/07-av-sandbox.md`)
+## 5. Sviluppo (igiene repository)
+
+### Line endings (Windows/macOS/Linux)
+Il repository normalizza i file di testo a **LF** tramite `.gitattributes` per compatibilità con ambienti Linux/Docker.
+
+Su Windows è consigliato (nel clone locale):
+```bash
+git config --local core.autocrlf false
+git config --local core.eol lf
+```
