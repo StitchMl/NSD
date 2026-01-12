@@ -1,0 +1,24 @@
+# Normalizza a LF nel repository (cross-platform)
+* text=auto eol=lf
+
+# Markdown sempre LF
+*.md text eol=lf
+
+# Script sempre LF (necessario su Linux/Docker)
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Config e file di rete comuni
+*.conf text eol=lf
+*.cfg  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# File binari (nessuna conversione)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.zip binary
