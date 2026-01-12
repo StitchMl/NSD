@@ -12,6 +12,10 @@ project/**/appliances/
 project/**/compute/
 project/**/captures/
 
+# JetBrains / IntelliJ
+.idea/
+*.iml
+
 # Generic
 *.swp
 .DS_Store
