@@ -5,7 +5,8 @@ set -euo pipefail
 #  - setup/   : script di addressing e host configuration
 #  - routing/ : script di routing (OSPF in AS100)
 
-mkdir -p setup routing
+mkdir -p setup routing macsec
+
 
 # =========================
 # Phase A: addressing
@@ -485,5 +486,116 @@ VEOF
 
 EOF
 
-chmod +x setup/*.sh routing/*.sh
+# =========================
+# Phase C: MACsec (MKA) - Site 2 LAN
+# =========================
+
+cat > macsec/mka_ce2.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+LAN_IF=eth0
+MACSEC_IF=macsec0
+IP_ADDR=192.168.20.1/24
+
+CAK=00112233445566778899aabbccddeeff
+CKN=000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+
+cat > macsec.conf <<EOF2
+eapol_version=3
+ap_scan=0
+network={
+  key_mgmt=NONE
+  eapol_flags=0
+  macsec_policy=1
+  mka_cak=$CAK
+  mka_ckn=$CKN
+}
+EOF2
+
+wpa_supplicant -i $LAN_IF -B -Dmacsec_linux -c macsec.conf
+
+# piccolo delay: macsec0 viene creata qualche istante dopo
+sleep 2
+
+ip addr del $IP_ADDR dev $LAN_IF 2>/dev/null || true
+ip addr replace $IP_ADDR dev $MACSEC_IF
+ip link set $MACSEC_IF up
+EOF
+
+
+cat > macsec/mka_b1.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+LAN_IF=eth0
+MACSEC_IF=macsec0
+IP_ADDR=192.168.20.10/24
+GW=192.168.20.1
+
+CAK=00112233445566778899aabbccddeeff
+CKN=000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+
+cat > macsec.conf <<EOF2
+eapol_version=3
+ap_scan=0
+network={
+  key_mgmt=NONE
+  eapol_flags=0
+  macsec_policy=1
+  mka_cak=$CAK
+  mka_ckn=$CKN
+}
+EOF2
+
+wpa_supplicant -i $LAN_IF -B -Dmacsec_linux -c macsec.conf
+sleep 2
+
+ip addr del $IP_ADDR dev $LAN_IF 2>/dev/null || true
+ip addr replace $IP_ADDR dev $MACSEC_IF
+ip link set $MACSEC_IF up
+
+# fondamentale: default route via CE2 su macsec0
+ip route replace default via $GW dev $MACSEC_IF
+EOF
+
+
+cat > macsec/mka_b2.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+LAN_IF=eth0
+MACSEC_IF=macsec0
+IP_ADDR=192.168.20.11/24
+GW=192.168.20.1
+
+CAK=00112233445566778899aabbccddeeff
+CKN=000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+
+cat > macsec.conf <<EOF2
+eapol_version=3
+ap_scan=0
+network={
+  key_mgmt=NONE
+  eapol_flags=0
+  macsec_policy=1
+  mka_cak=$CAK
+  mka_ckn=$CKN
+}
+EOF2
+
+wpa_supplicant -i $LAN_IF -B -Dmacsec_linux -c macsec.conf
+sleep 2
+
+ip addr del $IP_ADDR dev $LAN_IF 2>/dev/null || true
+ip addr replace $IP_ADDR dev $MACSEC_IF
+ip link set $MACSEC_IF up
+
+ip route replace default via $GW dev $MACSEC_IF
+EOF
+
+
+#permessi
+
+chmod +x setup/*.sh routing/*.sh macsec/*.sh
 echo "OK: creati setup/ e routing/. Ora esegui gli script dentro i nodi GNS3."
