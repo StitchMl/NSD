@@ -5,7 +5,7 @@ set -euo pipefail
 #  - setup/   : script di addressing e host configuration
 #  - routing/ : script di routing (OSPF in AS100)
 
-mkdir -p setup routing macsec dns
+mkdir -p setup routing macsec dns ipsec firewall
 
 
 # =========================
@@ -513,9 +513,6 @@ EOF
 # Phase B: IPsec Setup (VPN Site 1 <-> Site 2)
 # =========================
 
-# Crea la cartella locale per salvare i file
-mkdir -p ipsec
-
 # --- Configurazione per CE1 (Initiator) ---
 cat > ipsec/ce1.sh <<'EOF'
 #!/bin/bash
@@ -647,6 +644,158 @@ swanctl --list-sas || true
 EOF
 
 
+
+cat > ipsec/r201.sh <<'EOF'
+
+#!/bin/bash
+set -euo pipefail
+
+mkdir -p /etc/swanctl/conf.d
+
+echo ">>> Configurazione IPsec (Swanctl) su R202..."
+
+cat > /etc/swanctl/conf.d/ipsec.conf <<CONF
+connections {
+  r202-efw {
+    local_addrs  = 10.0.202.2
+    remote_addrs = 2.80.200.2
+
+    version = 2
+    mobike = no
+    encap = yes
+
+    local {
+      auth = psk
+      id = r202
+    }
+    remote {
+      auth = psk
+      id = efw
+    }
+
+    # MATCH CON EFW
+    proposals = aes128-sha256-modp2048
+
+    children {
+      lan-lan {
+        # Rete Locale (Central Node LAN3)
+        local_ts  = 10.202.3.0/24
+        # Rete Remota (Antivirus LAN1)
+        remote_ts = 10.200.1.0/24
+
+        # MATCH CON EFW
+        esp_proposals = aes128-sha256-modp2048
+
+        start_action = trap
+      }
+    }
+  }
+}
+
+secrets {
+  ike-psk {
+    id-1 = r202
+    id-2 = efw
+    secret = "nsd-efw-r202-psk-2026"
+  }
+}
+CONF
+
+echo ">>> Riavvio StrongSwan su R202..."
+service ipsec restart || service strongswan restart
+sleep 2
+
+echo ">>> Caricamento credenziali..."
+swanctl --load-creds
+swanctl --load-conns
+
+echo ">>> Tentativo di avvio connessione..."
+swanctl --initiate --child lan-lan
+
+echo ">>> Stato Tunnel:"
+swanctl --list-sas
+
+EOF
+
+
+cat > ipsec/eFW.sh <<'EOF'
+
+#!/bin/bash
+set -euo pipefail
+
+mkdir -p /etc/swanctl/conf.d
+
+echo ">>> Configurazione IPsec (Swanctl) su eFW..."
+
+cat > /etc/swanctl/conf.d/ipsec.conf <<CONF
+connections {
+  efw-r202 {
+    local_addrs  = 2.80.200.2
+    remote_addrs = 10.0.202.2
+
+    version = 2
+    mobike = no
+
+    # Importante: se ci sono firewall NAT o problemi di MTU
+    encap = yes
+
+    local {
+      auth = psk
+      id = efw
+    }
+    remote {
+      auth = psk
+      id = r202
+    }
+
+    # DEVE ESSERE IDENTICO A R202
+    proposals = aes128-sha256-modp2048
+
+    children {
+      lan-lan {
+        # Rete Locale (Antivirus LAN1)
+        local_ts  = 10.200.1.0/24
+        # Rete Remota (Central Node LAN3)
+        remote_ts = 10.202.3.0/24
+
+        # DEVE ESSERE IDENTICO A R202
+        esp_proposals = aes128-sha256-modp2048
+
+        # Start action trap: fa salire il tunnel appena c'è traffico
+        start_action = trap
+      }
+    }
+  }
+}
+
+secrets {
+  ike-psk {
+    id-1 = efw
+    id-2 = r202
+    secret = "nsd-efw-r202-psk-2026"
+  }
+}
+CONF
+
+echo ">>> Riavvio StrongSwan su eFW..."
+service ipsec restart || service strongswan restart
+sleep 2
+
+echo ">>> Caricamento credenziali..."
+swanctl --load-creds
+swanctl --load-conns
+
+echo ">>> Stato Tunnel:"
+swanctl --list-sas
+EOF
+
+
+
+
+
+
+
+
 # =========================
 # Phase C: MACsec (MKA) - Site 2 LAN
 # =========================
@@ -756,9 +905,6 @@ ip route replace default via $GW dev $MACSEC_IF
 EOF
 
 
-# =========================
-# Phase D: DNSSEC + HTTP Setup
-# =========================
 
 # =========================
 # Phase D: DNSSEC + HTTP Setup (Configuration Files Only)
@@ -882,7 +1028,7 @@ EOF
 
 ################
 # FIREWALL #####
-mkdir -p firewall
+
 
 cat > firewall/gw200.sh <<'EOF'
 #!/bin/bash
@@ -956,7 +1102,7 @@ iptables -A FORWARD -i eth1 -o eth0 -s 2.80.200.0/24 -j ACCEPT
 # Tutto ciò che esce da eth0 viene mascherato con l'IP pubblico di GW200
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
-echo "✅ Firewall GW200 Attivo!"
+echo "Firewall GW200 Attivo!"
 iptables -L -v -n
 EOF
 
