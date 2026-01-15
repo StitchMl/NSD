@@ -38,6 +38,8 @@ while true; do
     echo "[AV1] Invio report..."
     nc -w 2 $CENTRAL_NODE_IP 9001 < report.txt
 
+    rm -f binary report.txt
+
     echo "[AV1] Ciclo completato. In attesa del prossimo file."
     echo "----------------------------------------------------"
 done
@@ -84,6 +86,7 @@ while true; do
 
     nc -w 2 $CENTRAL_NODE_IP 9002 < report.txt
 
+    rm -f binary report.txt
     echo "[AV2] Ciclo completato."
 done
 EOF
@@ -132,6 +135,7 @@ while true; do
 
     nc -w 2 $CENTRAL_NODE_IP 9003 < report.txt
 
+    rm -f binary report.txt
     echo "[AV3] Ciclo completato."
 done
 EOF
