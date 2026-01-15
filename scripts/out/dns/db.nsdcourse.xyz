@@ -1,0 +1,13 @@
+$TTL 3h
+@   IN  SOA ns.nsdcourse.xyz. admin.nsdcourse.xyz. (
+        1       ; Serial
+        3h      ; Refresh
+        1h      ; Retry
+        1w      ; Expire
+        1h      ; Negative Cache TTL
+)
+
+@       IN  NS  ns.nsdcourse.xyz.
+@       IN  A   2.80.200.3
+ns      IN  A   2.80.200.3
+www     IN  A   2.80.200.3

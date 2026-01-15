@@ -1,0 +1,28 @@
+# --- COMANDI DA LANCIARE MANUALMENTE NEL NODO DNS ---
+
+# (opzionale) copia i file:
+# cp named.conf.options /etc/bind/
+# cp named.conf.local   /etc/bind/
+# cp db.nsdcourse.xyz   /etc/bind/
+
+cd /etc/bind
+
+# Genera chiavi DNSSEC
+dnssec-keygen -a ECDSAP384SHA384 -n ZONE nsdcourse.xyz
+dnssec-keygen -f KSK -a ECDSAP384SHA384 -n ZONE nsdcourse.xyz
+
+# Includi le chiavi nel file di zona
+for key in Knsdcourse.xyz*.key; do
+    echo "\$INCLUDE $key" >> db.nsdcourse.xyz
+done
+
+# Firma la zona
+dnssec-signzone -A -3 $(head -c 1000 /dev/random | sha1sum | cut -b 1-16) \
+  -N INCREMENT -o nsdcourse.xyz -t db.nsdcourse.xyz
+
+# Permessi
+chown -R bind:bind /etc/bind
+
+# Avvio servizi
+service apache2 start
+service named restart
