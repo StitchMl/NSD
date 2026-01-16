@@ -131,14 +131,20 @@ VEOF
 EOF
 
 write_file "$OUT/routing/bgp_r103.sh" <<'EOF'
-##!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 vtysh <<'VEOF'
 conf t
+!
+! 1. CREIAMO LA ROTTA "FANTASMA" PER L'AGGREGATO
+! BGP annuncia solo ciò che vede nella tabella di routing.
+! Creiamo una rotta statica verso Null0 per l'intera rete AS100.
+ip route 1.0.0.0/8 Null0
+!
 router bgp 100
  bgp router-id 1.255.0.3
  no bgp ebgp-requires-policy
- ! iBGP
+ ! iBGP Interne
  neighbor 1.255.0.1 remote-as 100
  neighbor 1.255.0.1 update-source lo
  neighbor 1.255.0.2 remote-as 100
@@ -150,13 +156,18 @@ router bgp 100
   neighbor 1.255.0.1 activate
   neighbor 1.255.0.2 activate
   neighbor 10.0.31.2 activate
+  !
+  ! Fondamentale per iBGP: R101 e R102 devono sapere che per uscire si passa da qui
   neighbor 1.255.0.1 next-hop-self
   neighbor 1.255.0.2 next-hop-self
+  !
+  ! 2. ANNUNCIO UFFICIALE VERSO AS200
+  ! Diciamo a R201: "Tutta la rete 1.x.x.x è roba mia"
+  network 1.0.0.0/8
  exit-address-family
 end
 write memory
 VEOF
-
 EOF
 
 write_file "$OUT/routing/bgp_r201.sh" <<'EOF'
@@ -164,8 +175,12 @@ write_file "$OUT/routing/bgp_r201.sh" <<'EOF'
 set -euo pipefail
 vtysh <<'VEOF'
 conf t
-!  rotta verso DMZ per poterla annunciare via BGP
-ip route 2.80.200.0/24 10.0.200.2
+!
+! 1. AGGIORNAMENTO ROTTA STATICA (Fondamentale!)
+! Rimuoviamo la vecchia che puntava all'IP privato
+no ip route 2.80.200.0/24 10.0.200.2
+! Aggiungiamo la nuova che punta al NUOVO IP PUBBLICO di GW200
+ip route 2.80.200.0/24 2.0.200.2
 !
 router bgp 200
  bgp router-id 2.255.0.1
@@ -174,10 +189,22 @@ router bgp 200
  !
  address-family ipv4 unicast
   neighbor 10.0.31.1 activate
+  
+  ! Loopback (Ok)
   network 2.255.0.1/32
+  
+  ! DMZ Enterprise (Ok)
   network 2.80.200.0/24
+  
+  ! 2. NUOVI ANNUNCI (Fondamentali!)
+  ! Dobbiamo dire ad AS100 che queste subnet pubbliche sono qui.
+  ! Link verso GW200
+  network 2.0.200.0/30
+  ! Link verso R202
+  network 2.0.202.0/30
+  
  exit-address-family
 end
 write memory
-VEOF 
+VEOF
 EOF
