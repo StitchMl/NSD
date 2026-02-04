@@ -62,46 +62,174 @@ In sintesi, il progetto fornisce un ambiente di rete completo con **routing dina
 
 * * *
 
-Comandi di verifica rapidi
---------------------------
-Di seguito alcuni comandi essenziali per verificare rapidamente lo stato delle principali funzionalità implementate.
+**Comandi di verifica rapidi**
 
-### Routing (AS100 e inter-AS)
-Da eseguire su ciascun router di `AS100` (`R101`, `R102`, `R103`):
-```bash
-vtysh -c "show ip ospf neighbor"    # Verifica adiacenze OSPF
-vtysh -c "show ip bgp summary"      # Verifica sessioni iBGP/eBGP e stato BGP
-vtysh -c "show ip route"            # Verifica tabella di routing unificata`
-```
-### Servizi DMZ (DNSSEC + HTTP)
-Da un host interno con accesso `DMZ` (es. `LAN-client` in `LAN2`):
-```bash
-dig +dnssec @2.80.200.3 www.nsdcourse.xyz    # Query DNS con verifica DNSSEC
-wget http://www.nsdcourse.xyz                # Richiesta HTTP al web server in DMZ`
-```
-### VPN IPsec Enterprise (R202 ↔ eFW)
-Su `R202` **e** `eFW` (estremi VPN enterprise):
-```bash
-swanctl --list-sas    # Elenco Security Association attive (tunnel IPsec)`
-```
-_Opzionale, per forzare l’instaurazione del tunnel:_ eseguire su `R202`:
-```bash
-swanctl --initiate --child lan-lan   # Avvia la child SA "lan-lan" manualmente`
-```
-### VPN IPsec Customer (CE1 ↔ CE2)
-Su entrambi i router `CE1` e `CE2`:
-```bash
-swanctl --list-sas    # Verifica tunnel IPsec site-to-site tra CE1 e CE2`
-```
-### MACsec (Site2 LAN)
-Da qualsiasi nodo di Site2 (es. `client-B1`):
-```bash
-ip -s link show macsec0   # Mostra statistiche interfaccia MACsec (contatori RX/TX)
-ping 192.168.20.1         # Test con ping verso CE2 sulla LAN protetta`
-```
-_(I contatori MACsec RX/TX incrementano se il traffico è cifrato con successo.)_
+---
 
-* * *
+## 1) Routing (AS100 + inter-AS)
+
+### OSPF (R101/R102/R103)
+
+```bash
+vtysh -c "show ip ospf neighbor"
+# vedo se le adiacenze OSPF sono UP (FULL) sui link p2p
+```
+
+```bash
+vtysh -c "show ip route ospf"
+# verifico che le rotte OSPF vengano installate in tabella
+```
+
+### BGP (AS100 iBGP + eBGP)
+
+```bash
+vtysh -c "show ip bgp summary"
+# controllo che le sessioni BGP siano Established
+```
+
+Su R103 (eBGP verso AS200 peer 10.0.31.2):
+
+```bash
+vtysh -c "show ip bgp neighbors 10.0.31.2"
+# verifico dettagli della sessione eBGP con AS200
+```
+
+Controllo “che cosa sto annunciando / ricevendo” (molto utile quando hai filtri prefix-list):
+
+```bash
+vtysh -c "show ip bgp neighbors 10.0.31.2 advertised-routes"
+# verifico che R103 annunci SOLO 1.0.0.0/8 verso AS200
+```
+
+Su R201 (AS200, peer verso AS100 = 10.0.31.1):
+
+```bash
+vtysh -c "show ip bgp neighbors 10.0.31.1 advertised-routes"
+# verifico che R201 annunci SOLO 2.0.0.0/8 verso AS100
+```
+
+---
+
+## 2) DNS + DNSSEC + HTTP (DMZ = 2.80.200.3)
+
+Da un host che può raggiungere la DMZ (es. LAN-client in LAN2):
+
+```bash
+dig @2.80.200.3 www.nsdcourse.xyz
+# verifico che il DNS risponda correttamente 
+```
+
+```bash
+dig +dnssec @2.80.200.3 www.nsdcourse.xyz
+# verifico presenza dei record DNSSEC 
+```
+
+HTTP:
+
+```bash
+wget http://www.nsdcourse.xyz
+# verifico rapidamente che risponda 
+```
+
+---
+
+## 3) IPsec Customer (CE1 ↔ CE2) — child: `lan-lan`
+
+* Endpoint pubblici: **CE1 1.0.101.2** ↔ **CE2 1.0.102.2**
+* Traffico protetto: **192.168.10.0/24 ↔ 192.168.20.0/24**
+
+Su **CE1 e CE2**:
+
+```bash
+swanctl --list-sas
+# vedo se le SA sono UP (IKE + CHILD) e con i TS giusti
+```
+
+---
+
+## 4) IPsec Enterprise (R202 ↔ eFW) — child: `lan-lan`
+
+* Endpoint: **R202 2.0.202.2** ↔ **eFW 2.80.200.2**
+* Traffico protetto: **LAN3 10.202.3.0/24 ↔ LAN1 10.200.1.0/24**
+* Central node: **10.202.3.10**
+* AV: **10.200.1.11 / .12 / .13**
+
+Su **R202 e eFW**:
+
+```bash
+swanctl --list-sas
+# verifico che la SA del tunnel enterprise sia attiva
+```
+
+---
+
+## 5) MACsec (Site2 LAN) — interfaccia `macsec0`
+
+* CE2 macsec0: **192.168.20.1/24**
+* B1: **192.168.20.10/24**
+* B2: **192.168.20.11/24**
+
+Su CE2/B1/B2:
+
+```bash
+ip link show macsec0
+# vedo se macsec0 esiste ed è UP
+```
+
+```bash
+ip -s link show macsec0
+# controllo che i contatori RX/TX aumentino (traffico cifrato ok)
+```
+
+---
+
+## 6) Firewall (GW200 / eFW / iFW) — verifica rapida contatori
+
+Su ciascun firewall:
+
+```bash
+iptables -L -v -n
+# vedo policy + contatori (capisci subito cosa sta matchando)
+```
+
+Se usi NAT (GW200 ce l’ha):
+
+```bash
+iptables -t nat -L -v -n
+# verifico che il masquerade stia effettivamente lavorando
+```
+
+
+
+Va bene 😄 eccoli **semplici** con il commentino **ultra-corto** come vuoi tu.
+
+## Base rete
+
+```bash
+ip a          # IP interfacce
+ip link       # stato UP/DOWN
+ip route      # tabella routing
+ip route get <IP>   # next-hop + interfaccia scelta
+```
+
+## Test connettività
+
+```bash
+ping -c 3 <IP>            # reachability
+ping -c 3 -I <IF> <IP>    # reachability da interfaccia
+traceroute -n <IP>        # hop del percorso
+tracepath -n <IP>         # hop + MTU/path
+```
+
+## Layer 2 / vicini
+
+```bash
+ip neigh     # ARP/neighbor table
+```
+
+
+---
+
 
 Piano di indirizzamento (sintesi)
 ---------------------------------
@@ -147,8 +275,8 @@ Piano di indirizzamento (sintesi)
 *   **`AS100` ↔ Customer Site2:** `1.0.102.0/30` (link WAN tra `R102` e `CE2`)
 *   **`AS100` ↔ `AS200` (eBGP):** `10.0.31.0/30` (link tra `R103` (`10.0.31.1`) e `R201` (`10.0.31.2\`))
 *   **`AS200` interno:**
-    *   Link `R201 ↔ GW200`: `10.0.200.0/30` (`R201`: `10.0.200.1`, `GW200`: `10.0.200.2`)
-    *   Link `R201 ↔ R202`: `10.0.202.0/30` (`R201`: `10.0.202.1`, `R202`: `10.0.202.2`)
+    *   Link `R201 ↔ GW200`: `2.0.200.0/30` (`R201`: `2.0.200.1`, `GW200`: `2.0.200.2`)
+    *   Link `R201 ↔ R202`: `2.0.202.0/30` (`R201`: `2.0.202.1`, `R202`: `2.0.202.2`)
 
 * * *
 
@@ -262,13 +390,13 @@ VPN IPsec (Enterprise & Customer)
 Sono implementati due tunnel **IPsec site-to-site**: uno tra la rete Enterprise (AS200) e la propria DMZ (Enterprise VPN), e uno tra le due sedi del Customer (Customer VPN). Entrambi utilizzano **strongSwan** (IKEv2) con autenticazione tramite PSK e sono configurati in modalità tunnel per cifrare interamente il traffico tra le sotto reti interessate.
 
 ### Enterprise VPN (R202 ↔ eFW)
-Questo tunnel IPsec collega la `LAN3` di `AS200` (sede del _`central-node`_) con la `LAN1` (dove risiedono gli host AV) passando attraverso il firewall perimetrale. Gli endpoint della VPN sono `R202` (IP locale `10.0.202.2` sul link verso `R201`) e `eFW` (IP pubblico `2.80.200.2` in `DMZ`). Il tunnel protegge quindi le sotto reti **`10.202.3.0/24`** (`LAN3`, lato `R202`) e **`10.200.1.0/24`** (`LAN1`, lato `eFW`).
+Questo tunnel IPsec collega la `LAN3` di `AS200` (sede del _`central-node`_) con la `LAN1` (dove risiedono gli host AV) passando attraverso il firewall perimetrale. Gli endpoint della VPN sono `R202` (IP locale `2.0.202.2` sul link verso `R201`) e `eFW` (IP pubblico `2.80.200.2` in `DMZ`). Il tunnel protegge quindi le sotto reti **`10.202.3.0/24`** (`LAN3`, lato `R202`) e **`10.200.1.0/24`** (`LAN1`, lato `eFW`).
 La configurazione strongSwan avviene tramite file **swanctl** su ciascun endpoint, definendo una connessione IKEv2 simmetrica. In particolare, `R202` è configurato con _local\_id_ "r202" e _remote\_id_ "efw", mentre `eFW` viceversa. Entrambi utilizzano la stessa suite crittografica (es. AES128-SHA256 con DH gruppo 14) e la stessa chiave pre-condivisa. Il child SA “lan-lan” include i traffici delle LAN indicate sopra. L’opzione `start_action = trap` fa sì che il tunnel si attivi automaticamente al primo traffico interessante.
 Snippet di configurazione IPsec (estratto dal file `/etc/swanctl/conf.d/ipsec.conf`):
 ```bash
 connections {
   r202-efw {
-    local_addrs  = 10.0.202.2        # R202 (Site LAN3)
+    local_addrs  = 2.0.202.2        # R202 (Site LAN3)
     remote_addrs = 2.80.200.2        # eFW (DMZ)
     local {
       auth = psk
