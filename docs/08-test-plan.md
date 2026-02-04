@@ -14,7 +14,7 @@
 - dig con +dnssec (RRSIG/DNSKEY presenti)
 
 ### HTTP
-- curl a `www.nsdcourse.xyz` da LAN-client
+- wget a `www.nsdcourse.xyz` da LAN-client
 
 ## 3. Firewall policy
 - Inbound: solo DNS/HTTP verso dns-server e IPsec verso eFW
