@@ -1,7 +1,7 @@
 
 ---
 
-# Firewall policy (finale) — con i TUOI indirizzi
+# Firewall policy 
 
 ## Nodi firewall/gateway
 
