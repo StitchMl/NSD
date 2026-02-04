@@ -322,45 +322,12 @@ Anche in questo caso, dopo aver caricato le configurazioni con _swanctl_, il com
 MACsec con MKA (Site2)
 ----------------------
 > Maggiori informazioni: [`docs/06-macsec-mka.md`](docs/06-macsec-mka.md)  
-> **Verifica:** controllare con `ip -s link show macsec0` su CE2 e host client di Site2 che i contatori di pacchetti MACsec aumentino durante le comunicazioni interne. Effettuare ping reciproci tra `client-B1`, `client-B2` e `CE2` per testare la connettività cifrata.
 
-Nel Site2 del cliente è stato implementato **MACsec (Media Access Control Security)** per proteggere il traffico all’interno della LAN locale (`192.168.20.0/24`). MACsec provvede cifratura e controllo di integrità a livello Ethernet (Layer 2) tra i nodi direttamente collegati in LAN, impedendo intercettazioni o manomissioni dei frame. In questo scenario, i partecipanti MACsec sono il router `CE2` e i due client (`client-B1`, `client-B2`), tutti collegati allo switch `Sw1` di Site2.
+Nel Site2 del cliente è stato implementato **MACsec** per proteggere il traffico all’interno della LAN locale (`192.168.20.0/24`). MACsec provvede cifratura e controllo di integrità a livello Ethernet (Layer 2) tra i nodi direttamente collegati in LAN, impedendo intercettazioni o manomissioni dei frame. In questo scenario, i partecipanti MACsec sono il router `CE2` e i due client (`client-B1`, `client-B2`), tutti collegati allo switch `Sw1` di Site2.
 
-Per gestire la distribuzione delle chiavi di crittografia MACsec, si utilizza il protocollo **MKA (MACsec Key Agreement)**. La soluzione è implementata tramite _wpa\_supplicant_ in ciascun nodo della LAN, configurato con un profilo speciale (driver _macsec\_linux_) e una chiave pre-condivisa. Tutti i nodi condividono gli stessi valori di **CAK** (Connectivity Association Key) e **CKN** (Identifier), in modo da far parte della medesima associazione crittografica.
+Per gestire la distribuzione delle chiavi di crittografia MACsec, si utilizza il protocollo **MKA (MACsec Key Agreement)**. La soluzione è implementata tramite _wpa\_supplicant_ in ciascun nodo della LAN e una chiave pre-condivisa. Tutti i nodi condividono gli stessi valori di **CAK** (Connectivity Association Key) e **CKN** (Identifier), in modo da far parte della medesima associazione crittografica. Con l'abilitazione del protocollo tutto il traffico locale tra CE2 e i client B1/B2 viaggia cifrato a livello 2. Dal punto di vista del routing IP e delle applicazioni nulla cambia (gli host continuano a comunicare su IP `192.168.20.x`), ma i frame Ethernet scambiati sono protetti da MACsec.
 
-Principali passi di configurazione MACsec in Site2:
-
-1.  **Configurazione MKA:** è definito un file di configurazione (es. `/etc/wpa_supplicant/macsec.conf`) identico su `CE2`, `client-B1` e `client-B2`, contenente i parametri MACsec. Ecco un estratto significativo:
-    
-    ```bash
-    network={
-      key_mgmt=NONE
-      macsec_policy=1
-      mka_cak=00112233445566778899AABBCCDDEEFF
-      mka_ckn=000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
-    }
-    ```
-    _(`mka_cak` è la chiave di cifratura condivisa da 32 caratteri esadecimali, `mka_ckn` il relativo identificatore a 64 hex.)_
-    
-2.  **Avvio del protocollo MKA:** su ogni nodo viene lanciato _wpa\_supplicant_ specificando l’interfaccia LAN fisica e il file di configurazione MACsec. Ad esempio:
-    ```bash
-    wpa_supplicant -B -i eth0 -D macsec_linux -c /etc/wpa_supplicant/macsec.conf`
-    ```
-    Questo comando inizializza MKA in background; al completamento della fase di negoziazione, viene automaticamente creata un’interfaccia virtuale **macsec0** (associata a `eth0`), attraverso la quale transiterà il traffico cifrato.
-    
-3.  **Migrazione degli indirizzi IP su macsec0:** una volta attiva macsec0, l’indirizzo IP di ogni host viene spostato dall’interfaccia fisica a quella MACsec. Ad esempio, su `CE2` si rimuove l’IP da `eth0` e si assegna a `macsec0`:
-    ```bash
-    ip addr del 192.168.20.1/24 dev eth0
-    ip addr add 192.168.20.1/24 dev macsec0
-    ip link set macsec0 up
-    ```
-    Operazioni analoghe avvengono su `client-B1` (.10) e `client-B2` (.11). L’interfaccia `eth0` rimane attiva ma priva di IP, fungendo da _parent_ di macsec0 per l’invio dei frame cifrati.
-    
-
-A questo punto, tutto il traffico locale tra CE2 e i client B1/B2 viaggia cifrato a livello 2. Dal punto di vista del routing IP e delle applicazioni nulla cambia (gli host continuano a comunicare su IP `192.168.20.x`), ma i frame Ethernet scambiati sono protetti da MACsec.
-**Test:** per verificare MACsec, si possono effettuare ping tra i vari dispositivi di Site2 (dovrebbero tutti risultare raggiungibili normalmente). Il comando `ip -s link show macsec0` su ciascun nodo mostrerà dei contatori (_TX/RX secure channels/SA_) che incrementano man mano che passa traffico – indice che la cifratura è attiva. Inoltre, tentando di intercettare il traffico sul segmento (es. Con _tcpdump_ su `eth0` dello switch/container) si osserveranno frame Ethernet cifrati (EtherType 0x88E5) invece dei normali frame IPv4, confermando l’operatività di MACsec.
-
->_L’abilitazione di MACsec è limitata alla LAN Site2 e non interferisce con BGP sul link WAN di CE2 (1.0.102.0/30) né con la VPN IPsec tra CE1 e CE2: questi ultimi operano a livelli diversi e su interfacce distinte._
+>_L’abilitazione di MACsec è limitata alla LAN Site2 e non interferisce con BGP sul link WAN di CE2 (1.0.102.0/30) né con la VPN IPsec tra CE1 e CE2: questi ultimi operano a livelli diversi e su interfacce distinte. Per vedere gli script di configurazione [`scripts/out/macsec`](scripts/out/macsec) per maggiori dettagli sulla configurazione._
 
 * * *
 
