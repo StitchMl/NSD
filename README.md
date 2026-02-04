@@ -301,38 +301,9 @@ Sono implementati due tunnel **IPsec site-to-site**: uno tra la rete Enterprise 
 
 ### Enterprise VPN (R202 ↔ eFW)
 Questo tunnel IPsec collega la `LAN3` di `AS200` (sede del _`central-node`_) con la `LAN1` (dove risiedono gli host AV) passando attraverso il firewall perimetrale. Gli endpoint della VPN sono `R202` (IP locale `2.0.202.2` sul link verso `R201`) e `eFW` (IP pubblico `2.80.200.2` in `DMZ`). Il tunnel protegge quindi le sotto reti **`10.202.3.0/24`** (`LAN3`, lato `R202`) e **`10.200.1.0/24`** (`LAN1`, lato `eFW`).
+
 La configurazione strongSwan avviene tramite file **swanctl** su ciascun endpoint, definendo una connessione IKEv2 simmetrica. In particolare, `R202` è configurato con _local\_id_ "r202" e _remote\_id_ "efw", mentre `eFW` viceversa. Entrambi utilizzano la stessa suite crittografica (es. AES128-SHA256 con DH gruppo 14) e la stessa chiave pre-condivisa. Il child SA “lan-lan” include i traffici delle LAN indicate sopra. L’opzione `start_action = trap` fa sì che il tunnel si attivi automaticamente al primo traffico interessante.
-Snippet di configurazione IPsec (estratto dal file `/etc/swanctl/conf.d/ipsec.conf`):
-```bash
-connections {
-  r202-efw {
-    local_addrs  = 2.0.202.2        # R202 (Site LAN3)
-    remote_addrs = 2.80.200.2        # eFW (DMZ)
-    local {
-      auth = psk
-      id = r202
-    }
-    remote {
-      auth = psk
-      id = efw
-    }
-    children {
-      lan-lan {
-        local_ts  = 10.202.3.0/24    # LAN3 Central Node subnet
-        remote_ts = 10.200.1.0/24    # LAN1 AV subnet
-        start_action = trap         # attiva tunnel su traffico
-      }
-    }
-  }
-}
-secrets {
-  ike-psk {
-    id-1 = r202
-    id-2 = efw
-    secret = "nsd-efw-r202-psk-2026"
-  }
-}
-```
+
 >_La sezione `connections` definisce parametri IKE e IPSec, mentre `secrets` contiene la PSK condivisa. Configurazioni analoghe sono presenti lato opposto con ruoli invertiti. Vedere gli script [`scripts/out/ipsec/r202.sh`](scripts/out/ipsec/r202.sh)) e [`scripts/out/ipsec/efw.sh`](scripts/out/ipsec/efw.sh) per il setup completo._
 
 Una volta configurato e avviato **strongSwan** su entrambi i nodi, il tunnel viene stabilito automaticamente al passaggio di traffico tra central-node e AV. Si può verificare lo stato con `swanctl --list-sas`, che elencherà la SA IKE e la SA child attiva (nome “lan-lan”), confermando la cifratura dei pacchetti tra `10.202.3.0/24` e `10.200.1.0/24`.
