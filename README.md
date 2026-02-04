@@ -253,7 +253,7 @@ Il dominio AS100 implementa un **IGP OSPF** per l’instradamento interno e un *
 *   **iBGP (`AS100`):** i medesimi router di `AS100` stabiliscono sessioni iBGP in full-mesh usando le interfacce di loopback come indirizzi peer (ridondanza e indipendenza dal link fisico). Ad esempio, `R101`, `R102` e `R103` hanno peer iBGP rispettivamente sulle IP `1.255.0.2` (`R102`) e `1.255.0.3` (`R103`), etc., con l’opzione `update-source lo` abilitata su ogni sessione affinché il traffico BGP sia originato dall’IP di loopback. Inoltre, su `R103` (punto di uscita verso `AS200`) è configurato `next-hop-self` verso i suoi peer iBGP, in modo da riscrivere come _next-hop_ il proprio indirizzo (anziché quello dei CE o altre reti) per le rotte apprese esternamente – garantendo che `R101`/`R102` inoltrino correttamente il traffico esterno verso `R103`.
 *   **eBGP (`AS100` ↔ `AS200`):** è attivato un peering BGP esterno tra `R103` (`AS100`) e `R201` (`AS200`) sul link condiviso `10.0.31.0/30`. `AS100` annuncia verso `AS200` i propri prefissi “pubblici” (ad esempio l’intero blocco `1.0.0.0/8` come aggregato, includendo le subnet `/30` verso `CE1` e `CE2`), mentre **`AS200`** annuncia ad `AS100` la rete della `DMZ` `2.80.200.0/24` (così che sia raggiungibile dai client attraverso `AS100`). `R201` in `AS200` non esegue un IGP completo: per distribuire la connettività all’interno di `AS200`, si utilizzano rotte statiche – ad esempio, `R201` ha rotte statiche per inoltrare il traffico destinato alla `DMZ` e alle LAN interne (`LAN1`, `LAN2`, `LAN3`) verso `GW200` o `R202` a seconda del caso. Analogamente, `R202` e `GW200` puntano di default tutto il traffico destinato fuori dalle proprie LAN verso `R201`. 
 
->_Per la configurazione completa di OSPF/BGP, si vedano gli script in [`scripts/out/routing/`](./scripts/out/routing) e i file di configurazione FRR salvati in [`project/configs/`](./project/configs)._
+>_Per la configurazione completa di OSPF/BGP, si vedano gli script in [`scripts/out/routing/`](./scripts/out/routing)._
 
 * * *
 
@@ -426,8 +426,7 @@ Struttura del repository
 Il repository è organizzato nelle seguenti directory principali:
 *   **[`docs/`](docs)** – Documentazione del progetto in formato Markdown, inclusa la topologia (`topologia_finale.png`) ed eventuali note legacy. 
 *   **[`project/`](project)** – File del progetto GNS3 ed export di configurazioni. In particolare:
-    *   **[`project/Topologia.gns3project`](project/Topologia.gns3project)** e altri file correlati – definizione della topologia GNS3 (nodi, collegamenti, configurazioni di base). 
-    *   **[`project/configs/`](project/configs)** – Configurazioni di avvio (_startup-config_) dei dispositivi di rete, ove persistenti. (Ad esempio, file `.cfg` con configurazioni FRR dei router, configurazioni iniziali dei firewall, ecc., generate dagli script di setup).
+    *   **[`project/Topologia.gns3project`](project/Topologia.gns3project)** e altri file correlati – definizione della topologia GNS3 (nodi, collegamenti, configurazioni di base).
 *   **[`inventory/`](inventory)** – Inventario dei nodi, link e subnet in formato YAML (usato per generazione automatica config, se applicabile). Contiene file come `devices.yml`, `links.yml`, `subnets.yml` con l’elenco delle interfacce, collegamenti fisici e indirizzi assegnati nella topologia. 
 *   **[`scripts/`](scripts)** – Script utilizzati per configurare automaticamente i nodi e i servizi. Organizzati per funzione:
     *   [`scripts/out/setup/`](scripts/out/setup) – script di inizializzazione generale per ciascun nodo (configurazioni base di sistema, interfacce, etc., es. `r101.sh`, `ce1.sh`, `dns.sh`...). 
