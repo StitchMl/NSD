@@ -215,8 +215,7 @@ ip route get <IP>   # next-hop + interfaccia scelta
 ```bash
 ping -c 3 <IP>            # reachability
 ping -c 3 -I <IF> <IP>    # reachability da interfaccia
-traceroute -n <IP>        # hop del percorso
-tracepath -n <IP>         # hop + MTU/path
+traceroute  <IP>        # hop del percorso
 ```
 
 ## Layer 2 / vicini
