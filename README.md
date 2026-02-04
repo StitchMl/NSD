@@ -201,8 +201,6 @@ iptables -t nat -L -v -n
 
 
 
-Va bene 😄 eccoli **semplici** con il commentino **ultra-corto** come vuoi tu.
-
 ## Base rete
 
 ```bash
