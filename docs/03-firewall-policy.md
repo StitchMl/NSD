@@ -1,7 +1,7 @@
 # Firewall policy (finale)
 
 ## Nodi firewall/gateway
-- GW200: 10.0.200.2/30 (verso R201), 2.80.200.1/24 (DMZ)
+- GW200: 2.0.200.2/30 (verso R201), 2.80.200.1/24 (DMZ)
 - eFW: 2.80.200.2/24 (outside/DMZ), 10.200.1.1/24 (LAN1)
 - iFW: 10.200.1.2/24 (LAN1), 10.200.2.1/24 (LAN2)
 
