@@ -8,7 +8,7 @@ set -euo pipefail
 write_file "$OUT/av/av1.sh" <<'EOF'
 #!/bin/bash
 # service_av.sh - ClamAV Listener Daemon
-CENTRAL_NODE_IP="10.202.3.10" # Sostituisci con IP vero del Central Node
+CENTRAL_NODE_IP="10.202.3.10" 
 sleep 20
 echo "[AV1] setup"
 # 1. Collega al Proxy
