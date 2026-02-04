@@ -253,26 +253,6 @@ Il dominio AS100 implementa un **IGP OSPF** per l’instradamento interno e un *
 *   **iBGP (`AS100`):** i medesimi router di `AS100` stabiliscono sessioni iBGP in full-mesh usando le interfacce di loopback come indirizzi peer (ridondanza e indipendenza dal link fisico). Ad esempio, `R101`, `R102` e `R103` hanno peer iBGP rispettivamente sulle IP `1.255.0.2` (`R102`) e `1.255.0.3` (`R103`), etc., con l’opzione `update-source lo` abilitata su ogni sessione affinché il traffico BGP sia originato dall’IP di loopback. Inoltre, su `R103` (punto di uscita verso `AS200`) è configurato `next-hop-self` verso i suoi peer iBGP, in modo da riscrivere come _next-hop_ il proprio indirizzo (anziché quello dei CE o altre reti) per le rotte apprese esternamente – garantendo che `R101`/`R102` inoltrino correttamente il traffico esterno verso `R103`.
 *   **eBGP (`AS100` ↔ `AS200`):** è attivato un peering BGP esterno tra `R103` (`AS100`) e `R201` (`AS200`) sul link condiviso `10.0.31.0/30`. `AS100` annuncia verso `AS200` i propri prefissi “pubblici” (ad esempio l’intero blocco `1.0.0.0/8` come aggregato, includendo le subnet `/30` verso `CE1` e `CE2`), mentre **`AS200`** annuncia ad `AS100` la rete della `DMZ` `2.80.200.0/24` (così che sia raggiungibile dai client attraverso `AS100`). `R201` in `AS200` non esegue un IGP completo: per distribuire la connettività all’interno di `AS200`, si utilizzano rotte statiche – ad esempio, `R201` ha rotte statiche per inoltrare il traffico destinato alla `DMZ` e alle LAN interne (`LAN1`, `LAN2`, `LAN3`) verso `GW200` o `R202` a seconda del caso. Analogamente, `R202` e `GW200` puntano di default tutto il traffico destinato fuori dalle proprie LAN verso `R201`. 
 
-Di seguito è riportato un estratto semplificato della configurazione BGP su `R103` (`AS100`), che evidenzia la definizione dei peer iBGP interni su loopback e del peer eBGP esterno (`AS200`):
-```bash
-router bgp 100
-  bgp router-id 1.255.0.3
-  ! iBGP interno (AS100 - full mesh)
-  neighbor 1.255.0.1 remote-as 100
-  neighbor 1.255.0.1 update-source lo
-  neighbor 1.255.0.2 remote-as 100
-  neighbor 1.255.0.2 update-source lo
-  ! eBGP esterno verso AS200
-  neighbor 10.0.31.2 remote-as 200
-  ...
-  address-family ipv4 unicast
-    neighbor 1.255.0.1 activate
-    neighbor 1.255.0.2 activate
-    neighbor 10.0.31.2 activate
-    neighbor 1.255.0.1 next-hop-self
-    neighbor 1.255.0.2 next-hop-self
-    network 1.0.0.0/8
-```
 >_Per la configurazione completa di OSPF/BGP, si vedano gli script in [`scripts/out/routing/`](./scripts/out/routing) e i file di configurazione FRR salvati in [`project/configs/`](./project/configs)._
 
 * * *
