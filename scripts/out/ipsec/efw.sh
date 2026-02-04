@@ -9,7 +9,7 @@ cat > /etc/swanctl/conf.d/ipsec.conf <<CONF
 connections {
   efw-r202 {
     local_addrs  = 2.80.200.2
-    remote_addrs = 10.0.202.2
+    remote_addrs = 2.0.202.2
 
     version = 2
     mobike = no

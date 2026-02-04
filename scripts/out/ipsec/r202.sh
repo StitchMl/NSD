@@ -8,7 +8,7 @@ echo ">>> Configurazione IPsec (Swanctl) su R202..."
 cat > /etc/swanctl/conf.d/ipsec.conf <<CONF
 connections {
   r202-efw {
-    local_addrs  = 10.0.202.2
+    local_addrs  = 2.0.202.2
     remote_addrs = 2.80.200.2
 
     version = 2
